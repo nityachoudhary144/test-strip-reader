@@ -136,6 +136,10 @@ also runs the full pipeline end to end and asserts that every pad on the demo st
 reads back as the level the generator painted, which is the same check `selftest`
 makes.
 
+The interface is covered as well. The tests drive the Streamlit app through
+Streamlit's own test harness, run the demo path, and check that the disclaimer, the
+upload prompt and the out of range summary all render.
+
 The suite needs no camera, no sample photo and no network, because the fixture is
 generated from a fixed seed.
 
