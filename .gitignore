@@ -24,6 +24,6 @@ samples/*
 !samples/.gitkeep
 
 # Generated when you run the tool - regenerable, so not committed.
-# (docs/example.jpg is a deliberate exception, it is referenced by the README.)
+# (docs/example*.jpg are deliberate exceptions, they are referenced by the README.)
 *_annotated*.jpg
 *_flat.jpg
