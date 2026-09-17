@@ -26,6 +26,21 @@ rectification, segmentation and classification against a reference. No machine
 learning is used, because a printed reference chart is already a labelled
 classifier; the work is in reading it reliably.
 
+## Objectives
+
+1. Locate a strip in an ordinary photograph and correct its perspective with no
+   manual input, so the measurement does not depend on how the strip was placed.
+2. Measure the colour of each pad as a number that does not change when the lighting
+   changes, using a white balance step driven by the strip itself.
+3. Classify each measurement against a printed reference chart in a perceptually
+   uniform colour space, and report how close the match was rather than a bare level.
+4. Report the uncertainty honestly, flagging a reading as poorly matched instead of
+   presenting every result as equally trustworthy.
+5. Keep the reference chart replaceable, so the tool can be pointed at a real product
+   by editing data rather than code.
+6. Verify the pipeline without a physical strip, so the geometry and the colour maths
+   can be tested repeatably and deterministically.
+
 ## Scope
 
 In scope:
