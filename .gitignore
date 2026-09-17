@@ -1,0 +1,29 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# --- Tooling ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# --- Project ---
+# Keep personal photos out of the repo; only .gitkeep is tracked.
+samples/*
+!samples/.gitkeep
+
+# Generated when you run the tool - regenerable, so not committed.
+# (docs/example.jpg is a deliberate exception, it is referenced by the README.)
+*_annotated*.jpg
+*_flat.jpg

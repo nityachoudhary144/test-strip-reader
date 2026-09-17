@@ -1,0 +1,7 @@
+# Core vision
+opencv-python>=4.11      # 4.11 is the first release with Python 3.13 wheels
+numpy>=1.26,<3
+
+# Demo UI
+streamlit>=1.40          # 1.40+ supports Python 3.13
+pillow>=10.2
