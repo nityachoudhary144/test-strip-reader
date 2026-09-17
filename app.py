@@ -5,7 +5,7 @@ import numpy as np
 import streamlit as st
 from PIL import Image
 
-import strip_analyzer as sa
+import strip_reader as sr
 
 st.set_page_config(page_title="Test Strip Reader", layout="wide")
 
@@ -24,16 +24,7 @@ def to_rgb(bgr: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
 
-def swatch_row(readings: list[sa.PadReading]) -> np.ndarray:
-    block, height = 90, 60
-    canvas = np.full((height, block * len(readings), 3), 255, np.uint8)
-    for index, reading in enumerate(readings):
-        x0 = index * block
-        canvas[:, x0 : x0 + block - 6] = (reading.rgb[2], reading.rgb[1], reading.rgb[0])
-    return canvas
-
-
-def show_results(result: sa.StripResult) -> None:
+def show_results(result: sr.StripResult) -> None:
     if not result.ok:
         st.error(result.message)
         return
@@ -50,9 +41,8 @@ def show_results(result: sa.StripResult) -> None:
             )
 
     with right:
-        abnormal = [r for r in result.readings if r.abnormal]
-        if abnormal:
-            st.error(f"{len(abnormal)} of {len(result.readings)} pads outside range")
+        if result.abnormal:
+            st.error(f"{len(result.abnormal)} of {len(result.readings)} pads outside range")
         else:
             st.success("All pads within range")
 
@@ -70,14 +60,20 @@ def show_results(result: sa.StripResult) -> None:
             )
 
         st.divider()
-        st.image(to_rgb(swatch_row(result.readings)), caption="Measured colours")
+        st.image(to_rgb(sr.swatch_strip(result.readings)), caption="Measured colours")
 
-        poor = [r for r in result.readings if r.confidence == "poor"]
-        if poor:
+        if result.poor_matches:
             st.warning(
                 "Some pads matched poorly (delta-E above 15). That may mean blur, "
                 "glare or a shadow across the strip."
             )
+
+        st.download_button(
+            "Download readings as CSV",
+            sr.readings_to_csv(result),
+            file_name="strip_readings.csv",
+            mime="text/csv",
+        )
 
 
 def sidebar_controls():
@@ -87,7 +83,7 @@ def sidebar_controls():
         "Pads on the strip",
         min_value=1,
         max_value=12,
-        value=len(sa.CHART),
+        value=len(sr.CHART),
     )
     calibrate = st.sidebar.checkbox("White balance", value=True)
 
@@ -120,9 +116,9 @@ with tab_upload:
     uploaded = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "webp"])
     if uploaded is not None:
         image = to_bgr(Image.open(uploaded))
-        quad = sa.manual_quad(image.shape, **layout) if manual else None
+        quad = sr.manual_quad(image.shape, **layout) if manual else None
         show_results(
-            sa.analyze(
+            sr.analyze(
                 image,
                 pad_count=pad_count,
                 calibrate=calibrate,
@@ -143,16 +139,16 @@ with tab_demo:
     angle = st.slider("Rotation", -25.0, 25.0, 6.0, 0.5)
 
     if st.button("Analyse demo strip", type="primary"):
-        st.session_state["demo_image"] = sa.demo_strip(pad_count=pad_count, angle=angle)
+        st.session_state["demo_image"] = sr.demo_strip(pad_count=pad_count, angle=angle)
 
     stored = st.session_state.get("demo_image")
     if stored is not None:
         show_results(
-            sa.analyze(
+            sr.analyze(
                 stored,
                 pad_count=pad_count,
                 calibrate=calibrate,
-                pad_start=sa.DEMO_PAD_START,
+                pad_start=sr.DEMO_PAD_START,
             )
         )
 
@@ -176,7 +172,7 @@ confidence. It says how close the measured colour is to the nearest chart colour
 high value may mean glare, blur or shadow, but a low value does not confirm the
 reading is correct.
 
-Two things to set before trusting a reading. The chart in `strip_analyzer.py` is
+Two things to set before trusting a reading. The chart in `strip_reader/chart.py` is
 made-up start-up data, not colours taken from a real product, and should be replaced
 with the colours printed on your own strip's packaging. A strip with a handle also
 needs "Pads start at" moved until the cells line up with the coloured squares in the
