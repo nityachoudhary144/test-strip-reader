@@ -1,15 +1,12 @@
 # Test Strip Reader
 
-Reads the pad colours on a urine test strip from a photo using classical computer
-vision: strip detection, perspective correction, per-pad colour sampling, white
-balance, and CIE-Lab colour matching against a reference chart. No machine learning.
+Uses classical computer vision to read the colors on a urine test strip from a photo: strip detection, correction for perspective distortion, color sampling for each pad, white balance, and matching to a reference color chart using CIE-Lab color matching. No machine learning.
 
-Educational demo, not a medical device. This reads the colours on a strip; it does
-not perform the chemistry and cannot diagnose anything. Follow the instructions
-supplied with your strips and confirm any result with a clinician.
+Educational demonstration, not a diagnostic device. Reads the colors on a strip,
+does no chemistry, and cannot diagnose anything. Follow instructions supplied with
+your strips and get any diagnosis verified by a clinician.
 
-Tested only on a synthetic strip. Accuracy on a real strip is unknown.
-
+Only tested on a simulated strip. Accuracy on an actual strip is unknown.
 ![Example output](docs/example.jpg)
 
 The synthetic demo strip. The green quad is the detected strip; the bar along the
@@ -17,22 +14,23 @@ bottom is the colour measured for each pad.
 
 ## Features
 
-- Detects one strip in a photo against a plain background, then rectifies rotation
-  and perspective into a fixed width strip image
-- Samples each pad by median from the middle of its cell, so glare and bleed do not
-  drag the colour
-- Estimates the lighting cast from neutral bright pixels inside the strip and scales
-  the channels to remove it
-- Classifies every pad against the reference chart in CIE-Lab by delta-E, and flags
-  levels outside the normal range
-- Reports the match distance per pad, so an unreadable strip can be spotted
-- Manual strip region, adjustable pad count and pad band for strips that auto
-  detection cannot handle
-- Export to CSV, an annotated overlay, and the straightened strip that was sampled
-- A seeded synthetic strip generator, which makes the whole pipeline testable
-  without a camera or a physical strip
-- Browser interface and command line interface over the same pipeline
-
+- Detects a single strip in an image on a homogeneous background, and corrects
+  the strip orientation and perspective to get a fixed-width strip image
+- Extracts the color of each pad by sampling the median of its cell in the middle,
+  thus eliminating effects like glare and bleed
+- Compensates for lighting effects based on the neutral pixels of the strip,
+  and scales the channels to eliminate it
+- Compares each pad with the reference chart in CIE-Lab using delta-E measure,
+  and marks any out-of-range values
+- Returns the comparison value for each pad, thus allowing for the identification
+  of unreadable strip
+- Manual detection of strip region, custom number of pads and pad bands in case
+  of strips which are impossible to automatically detect
+- Exports results to CSV file, annotated overlay image, and straightened strip image
+  which was used for sampling
+- An automated strip generation utility, allowing to test the pipeline without
+  actual hardware
+- Web-based interface and CLI interface on top of the pipeline
 ## Project documentation
 
 | File | Contents |
@@ -62,14 +60,14 @@ photo
 
 Three implementation choices:
 
-- **Median, not mean**, for the pad colour. One specular highlight drags a mean badly.
-- **Lab, not RGB.** Distance in Lab approximates perceived colour difference; distance
-  in RGB does not.
-- **delta-E is reported as a match distance, not as confidence.** It says how close the
-  measured colour is to the nearest chart colour and nothing more. A high value may mean
-  glare, blur or shadow, but a low value does not confirm the reading is correct, because
-  a poor white balance can shift every pad and still land close to the wrong level.
-
+- Use **median, not mean**, to calculate pad color. Specular highlights skew a mean.
+- **Lab color space, not RGB.** Distance between colors in Lab is an estimate of
+  perceptual color difference; distance between colors in RGB is not.
+- **Report delta-E as a match distance, not as a measure of confidence.** It is the
+  distance between the measured color and the nearest color on the chart. Delta-E
+  being high may indicate glare, blur, or shadow; delta-E being low does not indicate
+  correct reading because poor white balance will move all pads to a similar level,
+  even though it is incorrect.
 ## Files
 
 | Path | Purpose |
@@ -145,29 +143,28 @@ generated from a fixed seed.
 
 ## Before trusting a reading
 
-**Replace the chart.** `CHART` in `strip_reader/chart.py` is made-up start-up data, not
-colours taken from any real product. Every manufacturer prints different colours. This
-is the single biggest source of error and it is about ten lines to fix.
+**Replace the chart.** `CHART` in `strip_reader/chart.py` is artificial start-up data, but
+not colours derived from any actual device. Each manufacturer has unique colours. This
+is the largest single source of errors and will be corrected in about ten lines.
 
-**Set the pad region.** Most dipsticks have a white handle. If the sampling grid
-lands on it, the first pads read as false negatives. Move "Pads start at" in the
-sidebar until the cells line up with the coloured squares in the straightened view.
+**Set pad region.** Most dipsticks come with white handles. When the sampling grid
+falls onto the handle, the initial pads turn into false negatives. Change "Pads start at"
+in the sidebar so that the cells correspond to the coloured boxes in the flattened
+view.
 
-**Validate it.** Read a real strip by eye against the packaging chart, write down the
-answers, then run it through the tool and build a confusion matrix. Report that
-number rather than claiming the tool works.
-
+**Validate it.** Look at an actual strip with your own eyes compared to the chart in
+the packaging, write down the values, and then test them using the tool and create
+confusion matrix. Provide this value rather than saying the tool works perfectly.
 ## Limitations
 
-- Auto-detection needs a plain, contrasting background. Manual mode otherwise.
-- Colour depends on lighting, camera white balance and screen calibration.
-- The tool cannot know how long a strip has been developing. Most are read at 60 or
-  120 seconds, and a photo taken at the wrong time is simply wrong.
-- Pads bleed into each other on cheap strips. Only the middle 50% of each cell is
-  sampled.
-- Blood and leukocytes are non-specific. Menstruation, discharge and dehydration all
-  affect them.
-
+- Auto-detection requires a clear, contrasting background; otherwise, go manual.
+- Coloration is dependent on lighting, camera white balance, and screen calibration.
+- Time for development cannot be measured by the software; most strips are usually read
+  after 60 and 120 seconds. If the picture is taken too early or late, it is wrong.
+- Cheaper strips have cells that run into each other; only 50% of the middle of each
+  cell is used.
+- Blood and leukocytes are not specific; they are affected by menstruation,
+  discharge, and dehydration.
 ## License
 
 MIT
